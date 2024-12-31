@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         diff = newYear - new Date();
 
         // If the New Year has already occurred, stop the countdown and display 00:00:00
-        if (diff <= -24) {
+        if (!diff <= 0) {
             clearInterval(countdownInterval);
             countdownDisplay.textContent = "00:00:00";
             return;
