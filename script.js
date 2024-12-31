@@ -22,22 +22,23 @@ document.addEventListener('DOMContentLoaded', () => {
         let diff = newYear - now;
 
         countdownInterval = setInterval(() => {
-            diff = newYear - new Date();
+        diff = newYear - new Date();
 
-            if (diff <= 0) {
-                clearInterval(countdownInterval);
-                countdownDisplay.textContent = "Happy New Year!";
-                return;
-            }
+        // If the New Year has already occurred, stop the countdown and display 00:00:00
+        if (diff <= 0) {
+            clearInterval(countdownInterval);
+            countdownDisplay.textContent = "00:00:00";
+            return;
+        }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            countdownDisplay.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        }, 1000);
-    }
+        countdownDisplay.textContent = `${hours < 10 ? '0' : ''}${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }, 1000);
+}
 
     // Show area function (to manage the input sections)
     function showArea(area) {
