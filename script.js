@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('userName').value.trim();
 
         if (name && wish) {
-            fetch('http://127.0.0.1:3000/send-email', {
+            fetch('process.env.BACKEND_URL', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
