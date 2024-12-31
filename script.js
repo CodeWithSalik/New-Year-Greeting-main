@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = document.getElementById('userName').value.trim();
 
         if (name && wish) {
-            fetch('process.env.BACKEND_URL', {
+            fetch('https://newyear-backend.onrender.com/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
