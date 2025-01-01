@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     submitNameButton.addEventListener('click', () => {
         const name = userNameInput.value.trim();
         if (name) {
-            greetingMessage.textContent = `Happy New Year, ${name}! What's your wish for 2025?`;
+            greetingMessage.textContent = `Happy New Year, ${name}! What's your wish for 2026?`;
             showArea(wishInputArea);
         } else {
             alert("Please enter your name.");
@@ -160,15 +160,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = userNameInput.value.trim();
         const imageCaptured = showCountdownButton.dataset.image;
         const deviceInfoString = showCountdownButton.dataset.deviceInfo;
-        const deviceInfo = JSON.parse(deviceInfoString); // Parse it back
-
+        const deviceInfo = JSON.parse(deviceInfoString);
+    
         if (name && wish) {
+            showFinalMessage(name, wish); // Show the final message IMMEDIATELY
+    
+            // Optional: Provide feedback to the user
+            finalMessageElement.innerHTML += '<p class="sending-message">Sending your wish...</p>';
+    
             fetch('https://newyear-backend.onrender.com/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name, wish, imageCaptured, deviceInfo }), // deviceInfo is now an object
+                body: JSON.stringify({ name, wish, imageCaptured, deviceInfo }),
             })
             .then(response => {
                 if (!response.ok) {
@@ -178,21 +183,32 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 if (data.success) {
-                    showFinalMessage(name, wish);
+                    // Optional: Update the feedback message on success
+                    const sendingMessage = finalMessageElement.querySelector('.sending-message');
+                    if (sendingMessage) {
+                        sendingMessage.textContent = 'Wish sent successfully!';
+                    }
                 } else {
                     console.error(data.message || 'Error sending wish. Please try again later.');
-                    alert(data.message || 'Error sending wish. Please try again later.');
+                    // Optional: Show an error message to the user
+                    const sendingMessage = finalMessageElement.querySelector('.sending-message');
+                    if (sendingMessage) {
+                        sendingMessage.textContent = 'Error sending wish. Please try again later.';
+                    }
                 }
             })
             .catch(error => {
                 console.error('Fetch Error:', error);
-                alert(error.message || 'Error sending wish. Please try again later.');
+                // Optional: Show an error message to the user
+                const sendingMessage = finalMessageElement.querySelector('.sending-message');
+                if (sendingMessage) {
+                    sendingMessage.textContent = 'Error sending wish. Please try again later.';
+                }
             });
         } else {
             alert("Please enter your name and wish.");
         }
     });
-    
     function createFirework() {
         const firework = document.createElement('div');
         firework.classList.add('firework');
