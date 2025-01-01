@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const deviceInfo = JSON.parse(deviceInfoString); // Parse it back
 
         if (name && wish) {
-            fetch('http://localhost:3000/send-email', {
+            fetch('https://newyear-backend.onrender.com/send-email', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
